@@ -1,24 +1,68 @@
-# Java GeoCoding (위도 ,경도 추출)
+package map;
 
-HttpURLConnection을 이용하여 Naver Maps API 와 연결한다.
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONTokener;
 
-우선 네이버 클라우드 플랫폼의 아이디(Id)와 비밀번호(Secret)가 필요하다.
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.Date;
 
-[네이버 클라우드 플랫폼 Application 가이드](https://guide.ncloud-docs.com/docs/ko/naveropenapiv3-application)
+public class StaticMap {
+    // 지도 이미지 생성 메서드
+    public static void map_service(String point_x , String point_y ,String address){
+        String client_id = "po0v5t31yt";
+        String client_secret = "HJOhVIE8SRGzxyPHOydT3EthxAeo3yCykBu69S8Z";
+        String URL_STATICMAP = "https://naveropenapi.apigw.ntruss.com/map-static/v2/raster?";
 
-네이버 Maps Application의 다양한 REST API를 활용 해보자
+        try {
+            String pos = URLEncoder.encode(point_x+" "+point_y,"UTF-8");
+            String url = URL_STATICMAP;
+            url += "center="+point_x+","+point_y;
+            url += "&level=12&w=700&h=500";
+            url += "&markers=type:t|size:mid|pos:"+pos+"|label:"+URLEncoder.encode(address,"UTF-8");
+            URL u = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) u.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("X-NCP-APIGW-API-KEY-ID",client_id);
+            con.setRequestProperty("X-NCP-APIGW-API-KEY",client_secret);
+            int responseCode = con.getResponseCode();
+            BufferedReader br;
+            if (responseCode ==200){
+                InputStream is = con.getInputStream();
+                int read = 0;
+                byte[] bytes = new byte[1024];
+                // 랜덤한 이름으로 파일 생성
+                String tempname = Long.valueOf(new Date().getTime()).toString();
+                File f = new File("C:\\Temp/"+tempname+".jpg");
+                f.createNewFile();
+                OutputStream outputStream = new FileOutputStream(f);
+                while ((read = is.read(bytes)) != -1){
+                    outputStream.write(bytes,0,read);
+                }
+                is.close();
+            }else {
+                br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+                String inputLine;
+                StringBuffer response = new StringBuffer();
+                while ((inputLine = br.readLine() ) != null){
+                    response.append(inputLine);
 
-주소를 입력하면 위도와 경도를 포함한 상세 정보를 제공해주는 API
+                }
+                br.close();
+                System.out.println(response.toString());
+            }
+        } catch (Exception e) {
 
-"https://naveropenapi.apigw.ntruss.com/map-geocode/v2/geocode"
+            System.out.println(e);
+        }
+    }
 
-`GeoCoding.java`
-
-```java
-public class GeoCoding {
     public static void main(String[] args) {
-        String client_id = "비밀";
-        String client_secret = "비밀";
+        String client_id = "po0v5t31yt";
+        String client_secret = "HJOhVIE8SRGzxyPHOydT3EthxAeo3yCykBu69S8Z";
 
         // 프로그램이 데이터를 입력 받을 때 -> InputStream
         BufferedReader io = new BufferedReader(new InputStreamReader(System.in));
@@ -53,6 +97,7 @@ public class GeoCoding {
             // 서버에서 내려주는 데이터를 받는다.
             String line;
             StringBuffer response = new StringBuffer();
+            String x =""; String y=""; String z = "";
             while ((line = br.readLine()) != null){
                 // 데이터를 한 줄 씩 읽어서 StringBuffer 에 넣어준다.
                 response.append(line);
@@ -72,17 +117,14 @@ public class GeoCoding {
                 System.out.println("jibunAddress : " +temp.get("jibunAddress"));
                 System.out.println("경도: "+temp.get("x"));
                 System.out.println("위도: "+temp.get("y"));
+                x = (String) temp.get("x");
+                y = (String) temp.get("y");
+                z = (String) temp.get("roadAddress");
             }
+            // 추가된 부분분
+            map_service(x,y,z);
         } catch (Exception e) {
 
         }
     }
 }
-
-
-```
-
-추출한 위도 , 경도, 주소 json 객체로
-
-지도 이미지를 생성 할 수 있다.
-
