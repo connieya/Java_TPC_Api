@@ -24,7 +24,7 @@ public class Project06A_Server {
 
                 OutputStream out = socket.getOutputStream();
                 DataOutputStream dos = new DataOutputStream(out);
-                dos.writeUTF("ECHO"+message+"(from Server!");
+                dos.writeUTF("[ECHO] : "+message+" from Server!");
                 dos.close();
                 dis.close();
                 socket.close();

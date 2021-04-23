@@ -20,7 +20,9 @@ public class Project06F_MultiChatClient {
 
     // inner class
     static class ClientSender extends Thread{
-        Socket socket; DataOutputStream out; String name;
+        Socket socket;
+        DataOutputStream out;
+        String name;
         ClientSender(Socket socket, String name){
             this.socket = socket;
             this.name = name;
